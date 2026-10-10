@@ -18,7 +18,8 @@ import { networkConfig, type ContractIds, type NetworkConfig } from "../packages
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const KEYS_DIR = join(ROOT, ".data", "keys");
-export const DEPLOYMENTS_DIR = join(ROOT, "deployments");
+/** Override with DEPLOYMENTS_DIR (used by the E2E suite for an isolated deployment). */
+export const DEPLOYMENTS_DIR = process.env.DEPLOYMENTS_DIR ?? join(ROOT, "deployments");
 
 export interface Deployment {
   network: string;

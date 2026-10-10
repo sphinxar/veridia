@@ -1,0 +1,10 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/auth/session/route.js")
+R.c("server/chunks/180r_next_0-pbshg5sul98._.js")
+R.c("server/chunks/06bi_zod_v4_classic_1g24215mt4k5k._.js")
+R.c("server/chunks/06bi_zod_v4_core_0z3epxtgsyl1t._.js")
+R.c("server/chunks/06bi_zod_v4_locales_07w38dxotyz00._.js")
+R.c("server/chunks/1w_o_jose_dist_webapi_0ueoi6iqpnuc6._.js")
+R.c("server/chunks/[root-of-the-server]__02qtk-9do4hk9._.js")
+R.c("server/chunks/apps_web__next-internal_server_app_api_auth_session_route_actions_0_02y2d60ryvk.js")
+R.m("[project]/node_modules/.pnpm/next@16.4.0_@playwright+test@1.64.0_@types+node@22.20.5_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/apps/web/src/app/api/auth/session/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/node_modules/.pnpm/next@16.4.0_@playwright+test@1.64.0_@types+node@22.20.5_react-dom@19.3.0_react@19.3.0__react@19.3.0/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/apps/web/src/app/api/auth/session/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports

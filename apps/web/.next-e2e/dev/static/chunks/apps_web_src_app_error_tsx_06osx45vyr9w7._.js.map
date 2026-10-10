@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/sphinx2001/proyectos/veridia-mvp/apps/web/src/app/error.tsx"],"sourcesContent":["\"use client\";\nimport { Alert, Button } from \"@veridia/ui\";\n\nexport default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {\n  return (\n    <div className=\"mx-auto max-w-xl space-y-4\">\n      <Alert tone=\"danger\" title=\"Something went wrong\">\n        {error.message || \"Unexpected error\"}. If you just sent a transaction, it will still be reconciled with the chain.\n      </Alert>\n      <Button variant=\"outline\" onClick={reset}>Try again</Button>\n    </div>\n  );\n}\n"],"names":["ErrorPage","error","reset","className","tone","title","message","variant","onClick"],"mappings":";;;;;AACA;AAAA;AADA;;;AAGe,SAASA,UAAU,EAAEC,KAAK,EAAEC,KAAK,EAA6D;IAC3G,qBACE,sYAAC;QAAIC,WAAU;;0BACb,sYAAC,gJAAK;gBAACC,MAAK;gBAASC,OAAM;;oBACxBJ,MAAMK,OAAO,IAAI;oBAAmB;;;;;;;0BAEvC,sYAAC,iJAAM;gBAACC,SAAQ;gBAAUC,SAASN;0BAAO;;;;;;;;;;;;AAGhD;KATwBF"}}]
+}

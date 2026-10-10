@@ -13,7 +13,8 @@ import { Indexer, type ChainReader, type EventSource } from "./indexer";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const network = process.env.STELLAR_NETWORK ?? "local";
-const deployment = JSON.parse(readFileSync(join(ROOT, "deployments", `${network}.json`), "utf8")) as {
+const deploymentsDir = process.env.DEPLOYMENTS_DIR ?? join(ROOT, "deployments");
+const deployment = JSON.parse(readFileSync(join(deploymentsDir, `${network}.json`), "utf8")) as {
   contracts: ContractIds;
   startLedger: number;
   params: unknown;

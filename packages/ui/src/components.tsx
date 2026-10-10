@@ -296,23 +296,20 @@ export function TD({ className, ...p }: React.TdHTMLAttributes<HTMLTableCellElem
 // ---------------------------------------------------------------- Composite helpers
 
 export function EmptyState({
-  icon: Icon,
+  icon,
   title,
   description,
   action,
 }: {
-  icon?: React.ComponentType<{ className?: string }>;
+  /** A rendered icon element (elements, unlike components, can cross the RSC boundary). */
+  icon?: React.ReactNode;
   title: string;
   description?: string;
   action?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center">
-      {Icon && (
-        <div className="rounded-full bg-muted p-3">
-          <Icon className="size-6 text-muted-foreground" />
-        </div>
-      )}
+      {icon && <div className="rounded-full bg-muted p-3 text-muted-foreground [&_svg]:size-6">{icon}</div>}
       <div className="space-y-1">
         <p className="font-medium text-navy-900">{title}</p>
         {description && <p className="max-w-md text-sm text-muted-foreground">{description}</p>}
