@@ -1,0 +1,16 @@
+[package]
+name = "veridia-integration-tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+veridia-common = { workspace = true }
+veridia-project-escrow = { path = "../project-escrow" }
+veridia-verifier-registry = { path = "../verifier-registry" }
+veridia-verification = { path = "../verification" }
