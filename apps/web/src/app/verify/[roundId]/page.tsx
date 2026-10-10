@@ -36,7 +36,7 @@ export default async function RoundPage({ params }: { params: Promise<{ roundId:
           )}{" "}
           · Milestone {r.milestoneIndex + 1} · Attempt {r.attempt}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-navy-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Round #{r.id} {r.kind === 1 && <span className="text-base font-normal text-muted-foreground">— appeal of <Link className="text-primary hover:underline" href={`/verify/${r.parentRoundId}`}>#{r.parentRoundId}</Link></span>}
         </h1>
       </div>
@@ -92,7 +92,7 @@ export default async function RoundPage({ params }: { params: Promise<{ roundId:
                         <TD>{v ? <TxLink hash={v.committedTx} /> : <span className="text-xs text-muted-foreground">—</span>}</TD>
                         <TD>
                           {v?.revealed ? (
-                            <span className={v.vote === 1 ? "text-emerald-700" : "text-red-700"}>{v.vote === 1 ? "Approve" : "Reject"}</span>
+                            <span className={v.vote === 1 ? "text-success" : "text-danger"}>{v.vote === 1 ? "Approve" : "Reject"}</span>
                           ) : (
                             <span className="text-xs text-muted-foreground">{v ? "Hidden" : "—"}</span>
                           )}
@@ -136,7 +136,7 @@ export default async function RoundPage({ params }: { params: Promise<{ roundId:
               )}
               <div className="pt-2">
                 <p className="text-xs text-muted-foreground">Evidence hash bound to this round</p>
-                <p className="break-all font-mono text-[11px] text-navy-900" data-testid="round-evidence-hash">{r.evidenceHash}</p>
+                <p className="break-all font-mono text-[11px] text-foreground" data-testid="round-evidence-hash">{r.evidenceHash}</p>
               </div>
             </CardContent>
           </Card>

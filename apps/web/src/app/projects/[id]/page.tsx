@@ -30,7 +30,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             {p.chainId && <span className="text-xs text-muted-foreground">On-chain #{p.chainId}</span>}
             <span className="text-xs text-muted-foreground">· {p.category}</span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-navy-900" data-testid="project-title">{p.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground" data-testid="project-title">{p.title}</h1>
           <p className="max-w-3xl text-muted-foreground">{p.summary}</p>
           <p className="text-xs text-muted-foreground">
             Creator <Address value={p.creatorAddress} /> · Token <Address value={p.token} /> · Metadata hash <span className="font-mono">{p.metadataHash.slice(0, 12)}…</span>
@@ -182,7 +182,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                   {contributions.map((c) => (
                     <li key={c.funderAddress} className="flex items-center justify-between py-2">
                       <Address value={c.funderAddress} />
-                      <span className="tabular font-medium text-navy-900">
+                      <span className="tabular font-medium text-foreground">
                         {money(c.amount, sym)}
                         {c.refunded && <span className="ml-1 text-xs text-muted-foreground">(refunded)</span>}
                       </span>

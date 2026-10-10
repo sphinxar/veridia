@@ -120,7 +120,7 @@ export function RoundLive({ round }: { round: RoundProps }) {
           {round.milestoneCriteria && (
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Acceptance criteria</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-navy-900">{round.milestoneCriteria}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{round.milestoneCriteria}</p>
             </div>
           )}
           <Alert tone="info" title="What the hash check proves">
@@ -250,8 +250,8 @@ function VotePanel({ round, phase, myVote, onChange }: { round: RoundProps; phas
           <>
             <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Vote">
               {[
-                { v: Vote.Approve, label: "Approve", icon: ThumbsUp, cls: "border-emerald-600 bg-primary-soft" },
-                { v: Vote.Reject, label: "Reject", icon: ThumbsDown, cls: "border-red-600 bg-danger-soft" },
+                { v: Vote.Approve, label: "Approve", icon: ThumbsUp, cls: "border-success/60 bg-success-soft" },
+                { v: Vote.Reject, label: "Reject", icon: ThumbsDown, cls: "border-danger/60 bg-danger-soft" },
               ].map((o) => (
                 <button
                   key={o.v}
@@ -264,7 +264,7 @@ function VotePanel({ round, phase, myVote, onChange }: { round: RoundProps; phas
                 >
                   <o.icon className="size-5" />
                   <span>
-                    <span className="block font-semibold text-navy-900">{o.label}</span>
+                    <span className="block font-semibold text-foreground">{o.label}</span>
                     <span className="text-xs text-muted-foreground">{o.v === Vote.Approve ? "Evidence shows the milestone was achieved" : "Evidence is insufficient or contradicts the claim"}</span>
                   </span>
                 </button>
@@ -409,7 +409,7 @@ function DecisionCard({ round, decision, outcome, onChange }: { round: RoundProp
         )}
         {allowed && (
           <div className="space-y-2 rounded-md border border-border p-3">
-            <p className="text-sm text-navy-900">
+            <p className="text-sm text-foreground">
               You may file the single appeal for this decision. A new panel that excludes the original verifiers re-votes on the same evidence.
             </p>
             <p className="text-xs text-muted-foreground">

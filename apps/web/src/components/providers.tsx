@@ -169,7 +169,7 @@ export function Providers({ config, children }: { config: PublicConfig; children
     <ConfigContext.Provider value={config}>
       <WalletContext.Provider value={value}>
         {children}
-        <Toaster position="bottom-right" richColors closeButton />
+        <Toaster position="bottom-right" theme="dark" richColors closeButton />
       </WalletContext.Provider>
     </ConfigContext.Provider>
   );

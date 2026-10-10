@@ -151,7 +151,7 @@ export function EvidencePanel({
             return (
               <li key={v.id} className="rounded-md border border-border p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-navy-900">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                     {onSelect && (
                       <input type="radio" name={`ev-${projectId}-${milestoneIndex}`} checked={selected === v.sha256} onChange={() => onSelect(v.sha256)} aria-label={`Select version ${v.version}`} />
                     )}
@@ -169,7 +169,7 @@ export function EvidencePanel({
                 <p className="mt-1 break-all font-mono text-[11px] text-muted-foreground">sha256 {v.sha256}</p>
                 {v.note && <p className="mt-1 text-xs text-muted-foreground">{v.note}</p>}
                 {checks[v.id] === "ok" && (
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-700" data-testid="integrity-ok">
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-success" data-testid="integrity-ok">
                     <CheckCircle2 className="size-3.5" /> File re-hashed in your browser: matches{bound ? " the hash bound to the on-chain round" : " the recorded hash"}. This proves integrity, not that the claims in it are true.
                   </p>
                 )}

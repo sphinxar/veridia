@@ -162,7 +162,7 @@ export function NewProjectForm() {
             {fields.map((f, i) => (
               <div key={f.id} className="rounded-lg border border-border p-4" data-testid={`milestone-${i}`}>
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-navy-900">Milestone {i + 1}</p>
+                  <p className="text-sm font-semibold text-foreground">Milestone {i + 1}</p>
                   {fields.length > 1 && (
                     <Button type="button" variant="ghost" size="sm" onClick={() => remove(i)} aria-label={`Remove milestone ${i + 1}`}>
                       <Trash2 />
@@ -210,7 +210,7 @@ export function NewProjectForm() {
           <CardContent className="space-y-4">
             <div className="flex items-baseline justify-between">
               <span className="text-sm text-muted-foreground">Total budget</span>
-              <span className="tabular text-xl font-semibold text-navy-900" data-testid="budget-total">{formatAmount(budget)} XLM</span>
+              <span className="tabular text-xl font-semibold text-foreground" data-testid="budget-total">{formatAmount(budget)} XLM</span>
             </div>
             <p className="text-sm text-muted-foreground">{fields.length} milestone(s), each released only after a final on-chain approval.</p>
             <Alert tone="info" title="Two steps">

@@ -11,22 +11,26 @@ import { cn } from "./cn";
 // ---------------------------------------------------------------- Button
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-[background-color,border-color,box-shadow,filter,color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover",
-        navy: "bg-navy-900 text-white shadow-sm hover:bg-navy-800",
-        outline: "border border-border bg-surface text-foreground hover:bg-muted",
-        ghost: "text-foreground hover:bg-muted",
-        danger: "bg-danger text-white hover:bg-red-800",
-        link: "text-primary underline-offset-4 hover:underline px-0",
+        // Lilac gradient pill with a soft violet glow (primary action).
+        default:
+          "bg-[linear-gradient(135deg,#e6d3ff_0%,#c4a1ff_45%,#a98bff_100%)] text-primary-foreground shadow-[0_10px_30px_-8px_rgb(167_139_250/0.65)] hover:brightness-110 hover:shadow-[0_12px_36px_-8px_rgb(167_139_250/0.8)]",
+        // Deep violet pill for secondary-but-prominent actions.
+        navy: "border border-accent/30 bg-navy-800 text-foreground hover:border-accent/60 hover:bg-navy-700",
+        // Transparent pill with a violet outline (secondary action).
+        outline: "border border-accent/55 bg-white/[0.03] text-foreground hover:border-accent/90 hover:bg-accent/10",
+        ghost: "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground",
+        danger: "border border-danger/40 bg-danger-soft text-danger hover:border-danger/70 hover:bg-danger/20",
+        link: "rounded-none px-0 text-primary underline-offset-4 hover:underline",
       },
       size: {
-        sm: "h-8 px-3 text-xs",
-        default: "h-10 px-4",
-        lg: "h-11 px-6 text-base",
-        icon: "h-9 w-9",
+        sm: "h-8 px-3.5 text-xs",
+        default: "h-10 px-5",
+        lg: "h-12 px-7 text-base",
+        icon: "h-10 w-10",
       },
     },
     defaultVariants: { variant: "default", size: "default" },
@@ -49,14 +53,23 @@ Button.displayName = "Button";
 
 // ---------------------------------------------------------------- Card
 
+/** Glass panel: translucent violet surface, hairline border, faint top highlight. */
 export function Card({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-lg border border-border bg-surface shadow-sm", className)} {...p} />;
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border border-white/[0.08] bg-surface/80 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.05)]",
+        className,
+      )}
+      {...p}
+    />
+  );
 }
 export function CardHeader({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("flex flex-col gap-1 p-5 pb-3", className)} {...p} />;
 }
 export function CardTitle({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-base font-semibold text-navy-900", className)} {...p} />;
+  return <h3 className={cn("text-base font-semibold tracking-tight text-foreground", className)} {...p} />;
 }
 export function CardDescription({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) {
   return <p className={cn("text-sm text-muted-foreground", className)} {...p} />;
@@ -75,12 +88,12 @@ export const badgeVariants = cva(
   {
     variants: {
       tone: {
-        neutral: "border-border bg-muted text-muted-foreground",
-        success: "border-emerald-200 bg-primary-soft text-emerald-800",
-        warning: "border-amber-200 bg-warning-soft text-amber-800",
-        danger: "border-red-200 bg-danger-soft text-red-800",
-        info: "border-blue-200 bg-info-soft text-blue-800",
-        navy: "border-navy-800 bg-navy-900 text-white",
+        neutral: "border-white/10 bg-white/[0.05] text-muted-foreground",
+        success: "border-success/30 bg-success-soft text-success",
+        warning: "border-warning/30 bg-warning-soft text-warning",
+        danger: "border-danger/30 bg-danger-soft text-danger",
+        info: "border-info/30 bg-info-soft text-info",
+        navy: "border-accent/35 bg-primary-soft text-accent",
       },
     },
     defaultVariants: { tone: "neutral" },
@@ -101,7 +114,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     <input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 aria-[invalid=true]:border-danger",
+        "flex h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm text-foreground transition-colors placeholder:text-muted-foreground/60 hover:border-white/20 focus-visible:border-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50 aria-[invalid=true]:border-danger",
         className,
       )}
       {...p}
@@ -115,7 +128,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
     <textarea
       ref={ref}
       className={cn(
-        "flex min-h-[90px] w-full rounded-md border border-border bg-surface px-3 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[invalid=true]:border-danger",
+        "flex min-h-[96px] w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground/60 hover:border-white/20 focus-visible:border-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 aria-[invalid=true]:border-danger",
         className,
       )}
       {...p}
@@ -125,7 +138,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
 Textarea.displayName = "Textarea";
 
 export function Label({ className, ...p }: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn("text-sm font-medium text-navy-900", className)} {...p} />;
+  return <label className={cn("text-sm font-medium text-foreground", className)} {...p} />;
 }
 
 export function FieldError({ message }: { message?: string }) {
@@ -142,7 +155,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
     <select
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-sm text-foreground transition-colors hover:border-white/20 focus-visible:border-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&>option]:bg-surface-raised",
         className,
       )}
       {...p}
@@ -155,11 +168,12 @@ Select.displayName = "Select";
 
 const alertIcons = { info: Info, success: CheckCircle2, warning: TriangleAlert, danger: AlertCircle };
 const alertTones = {
-  info: "border-blue-200 bg-info-soft text-blue-900",
-  success: "border-emerald-200 bg-primary-soft text-emerald-900",
-  warning: "border-amber-200 bg-warning-soft text-amber-900",
-  danger: "border-red-200 bg-danger-soft text-red-900",
+  info: "border-info/25 bg-info-soft",
+  success: "border-success/25 bg-success-soft",
+  warning: "border-warning/25 bg-warning-soft",
+  danger: "border-danger/30 bg-danger-soft",
 };
+const alertIconTones = { info: "text-info", success: "text-success", warning: "text-warning", danger: "text-danger" };
 export function Alert({
   tone = "info",
   title,
@@ -173,11 +187,11 @@ export function Alert({
 }) {
   const Icon = alertIcons[tone];
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={cn("flex gap-3 rounded-md border p-3 text-sm", alertTones[tone], className)}>
-      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
+    <div role={tone === "danger" ? "alert" : "status"} className={cn("flex gap-3 rounded-xl border p-3.5 text-sm text-foreground", alertTones[tone], className)}>
+      <Icon className={cn("mt-0.5 size-4 shrink-0", alertIconTones[tone])} aria-hidden />
       <div className="space-y-1">
         {title && <p className="font-medium">{title}</p>}
-        {children && <div className="text-[13px] leading-relaxed opacity-90">{children}</div>}
+        {children && <div className="text-[13px] leading-relaxed text-foreground/80">{children}</div>}
       </div>
     </div>
   );
@@ -190,10 +204,10 @@ export function Progress({ value, className, label }: { value: number; className
     <ProgressPrimitive.Root
       aria-label={label}
       value={value}
-      className={cn("relative h-2 w-full overflow-hidden rounded-full bg-muted", className)}
+      className={cn("relative h-2 w-full overflow-hidden rounded-full bg-white/10", className)}
     >
       <ProgressPrimitive.Indicator
-        className="h-full bg-primary transition-all"
+        className="h-full rounded-full bg-[linear-gradient(90deg,#a98bff,#e6d3ff)] transition-all"
         style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
       />
     </ProgressPrimitive.Root>
@@ -201,7 +215,7 @@ export function Progress({ value, className, label }: { value: number; className
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cn("animate-pulse rounded-md bg-muted", className)} />;
+  return <div aria-hidden className={cn("animate-pulse rounded-xl bg-white/[0.07]", className)} />;
 }
 
 export function Separator({ className }: { className?: string }) {
@@ -227,14 +241,14 @@ export function DialogContent({
 }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-navy-950/40 backdrop-blur-[1px]" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-6 shadow-xl focus:outline-none",
+          "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-surface-raised p-6 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.8)] focus:outline-none",
           className,
         )}
       >
-        <DialogPrimitive.Title className="text-lg font-semibold text-navy-900">{title}</DialogPrimitive.Title>
+        <DialogPrimitive.Title className="text-lg font-semibold tracking-tight text-foreground">{title}</DialogPrimitive.Title>
         {description ? (
           <DialogPrimitive.Description className="mt-1 text-sm text-muted-foreground">{description}</DialogPrimitive.Description>
         ) : (
@@ -253,13 +267,13 @@ export function DialogContent({
 
 export const Tabs = TabsPrimitive.Root;
 export function TabsList({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("inline-flex h-10 items-center gap-1 rounded-md bg-muted p-1", className)} {...p} />;
+  return <TabsPrimitive.List className={cn("inline-flex h-11 items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1", className)} {...p} />;
 }
 export function TabsTrigger({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "inline-flex items-center justify-center rounded px-3 py-1.5 text-sm font-medium text-muted-foreground transition-all data-[state=active]:bg-surface data-[state=active]:text-navy-900 data-[state=active]:shadow-sm",
+        "inline-flex items-center justify-center rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground transition-all hover:text-foreground data-[state=active]:bg-primary-soft data-[state=active]:text-accent",
         className,
       )}
       {...p}
@@ -278,16 +292,16 @@ export function Table({ className, ...p }: React.TableHTMLAttributes<HTMLTableEl
   );
 }
 export function THead(p: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead className="border-b border-border bg-muted/50" {...p} />;
+  return <thead className="border-b border-white/10 bg-white/[0.03]" {...p} />;
 }
 export function TBody(p: React.HTMLAttributes<HTMLTableSectionElement>) {
-  return <tbody className="divide-y divide-border" {...p} />;
+  return <tbody className="divide-y divide-white/[0.06]" {...p} />;
 }
 export function TR({ className, ...p }: React.HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={cn("hover:bg-muted/40", className)} {...p} />;
+  return <tr className={cn("transition-colors hover:bg-white/[0.04]", className)} {...p} />;
 }
 export function TH({ className, ...p }: React.ThHTMLAttributes<HTMLTableCellElement>) {
-  return <th className={cn("h-10 px-3 text-left align-middle text-xs font-semibold uppercase tracking-wide text-muted-foreground", className)} {...p} />;
+  return <th className={cn("h-11 px-3 text-left align-middle text-xs font-medium text-muted-foreground", className)} {...p} />;
 }
 export function TD({ className, ...p }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return <td className={cn("px-3 py-3 align-middle", className)} {...p} />;
@@ -308,10 +322,10 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface px-6 py-12 text-center">
-      {icon && <div className="rounded-full bg-muted p-3 text-muted-foreground [&_svg]:size-6">{icon}</div>}
-      <div className="space-y-1">
-        <p className="font-medium text-navy-900">{title}</p>
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-accent/25 bg-white/[0.02] px-6 py-14 text-center">
+      {icon && <div className="rounded-full bg-primary-soft p-3.5 text-accent [&_svg]:size-6">{icon}</div>}
+      <div className="space-y-1.5">
+        <p className="text-base font-medium text-foreground">{title}</p>
         {description && <p className="max-w-md text-sm text-muted-foreground">{description}</p>}
       </div>
       {action}
@@ -331,10 +345,10 @@ export function Stat({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-lg border border-border bg-surface p-4", className)}>
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="tabular mt-1 text-2xl font-semibold text-navy-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+    <div className={cn("rounded-2xl border border-white/[0.08] bg-surface/80 p-4 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.05)]", className)}>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="tabular mt-1 text-2xl font-semibold tracking-tight text-foreground">{value}</p>
+      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
 }

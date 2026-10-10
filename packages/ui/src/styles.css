@@ -1,43 +1,557 @@
-/* Veridia design tokens — light fintech theme: navy typography, emerald accents. */
+/*
+ * Veridia design tokens — dark violet theme.
+ * Reference: near-black violet canvas, blurred violet glows at the edges, lilac accent,
+ * pill buttons. Token names are kept from the previous light theme so every component
+ * keeps working; only the values (and a few new accent/semantic tokens) changed.
+ */
 @theme {
-  --color-background: #f6f8fb;
-  --color-surface: #ffffff;
-  --color-foreground: #0b1f3a;
-  --color-muted: #eef2f7;
-  --color-muted-foreground: #4a5b74;
-  --color-border: #dbe3ee;
-  --color-ring: #059669;
-  --color-navy-950: #061428;
-  --color-navy-900: #0b1f3a;
-  --color-navy-800: #12305a;
-  --color-navy-700: #1b417a;
-  --color-primary: #047857;
-  --color-primary-hover: #065f46;
-  --color-primary-foreground: #ffffff;
-  --color-primary-soft: #d1fae5;
-  --color-warning: #b45309;
-  --color-warning-soft: #fef3c7;
-  --color-danger: #b91c1c;
-  --color-danger-soft: #fee2e2;
-  --color-info: #1d4ed8;
-  --color-info-soft: #dbeafe;
-  --radius-lg: 0.75rem;
-  --radius-md: 0.5rem;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* canvas + surfaces */
+  --color-background: #06040d;
+  --color-surface: #130d24;
+  --color-surface-raised: #1b1233;
+  --color-foreground: #f5f2ff;
+  --color-muted: #1c1433;
+  --color-muted-foreground: #b6afcf;
+  --color-border: #2f2650;
+  --color-ring: #c4a1ff;
+
+  /* lilac accent (primary) */
+  --color-accent: #c4a1ff;
+  --color-accent-strong: #a98bff;
+  --color-primary: #c4a1ff;
+  --color-primary-hover: #d6bdff;
+  --color-primary-foreground: #170d2e;
+  --color-primary-soft: rgb(196 161 255 / 0.14);
+
+  /* semantic */
+  --color-success: #6ee7b7;
+  --color-success-soft: rgb(110 231 183 / 0.12);
+  --color-warning: #fbbf24;
+  --color-warning-soft: rgb(251 191 36 / 0.12);
+  --color-danger: #fb8a8a;
+  --color-danger-soft: rgb(248 113 113 / 0.13);
+  --color-info: #9bbcff;
+  --color-info-soft: rgb(147 180 255 / 0.13);
+
+  /* deep violet shades (kept under the old "navy" names) */
+  --color-navy-950: #070410;
+  --color-navy-900: #120b24;
+  --color-navy-800: #1b1235;
+  --color-navy-700: #261a49;
+
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 @layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-background);
+  }
   * {
     border-color: var(--color-border);
   }
   body {
-    background: var(--color-background);
+    position: relative;
+    min-height: 100vh;
+    background: transparent;
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss03";
     -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: rgb(196 161 255 / 0.35);
   }
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ------------------------------------------------------------------ Aurora (animated background)
+ * Layers, back to front: clouds (violet / indigo / magenta, each drifting, rotating and breathing),
+ * light shafts, three starfields, film grain. Every layer sits in a `.layer` parallax wrapper that
+ * follows the pointer and the scroll (CSS vars --mx/--my/--sy set on <html> by <Aurora/>).
+ * Only transform and opacity are animated; no blur filters.
+ */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+  animation: aurora-in 1600ms ease-out backwards;
+}
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(6 4 13 / 0);
+  transition: background-color 0.9s ease;
+}
+.aurora[data-calm="true"]::after {
+  background: rgb(6 4 13 / 0.5);
+}
+.aurora[data-calm="true"] .ray,
+.aurora[data-calm="true"] .tw {
+  display: none;
+}
+
+/* Lite mode (set automatically when the device cannot keep ~26 fps): keep the glow, drop the extras. */
+html[data-perf="lite"] .ray,
+html[data-perf="lite"] .tw,
+html[data-perf="lite"] .grain,
+html[data-perf="lite"] .cloud-5,
+html[data-perf="lite"] .cloud-6,
+html[data-perf="lite"] .cloud-7,
+html[data-perf="lite"] .cloud-8,
+html[data-perf="lite"] .sky,
+html[data-perf="lite"] .orbit-mark .smil {
+  display: none;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  transform: translate3d(
+    calc(var(--mx, 0) * var(--depth, 0) * -1px),
+    calc((var(--my, 0) * var(--depth, 0) + var(--sy, 0) * var(--sdepth, 0)) * -1px),
+    0
+  );
+}
+
+.cloud {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    rgb(var(--c) / var(--a)) 0%,
+    rgb(var(--c) / calc(var(--a) * 0.62)) 22%,
+    rgb(var(--c) / calc(var(--a) * 0.3)) 45%,
+    rgb(var(--c) / calc(var(--a) * 0.11)) 68%,
+    rgb(var(--c) / calc(var(--a) * 0.03)) 86%,
+    transparent 100%
+  );
+  will-change: transform, opacity;
+  animation: var(--k) var(--dur) ease-in-out var(--dl, 0s) infinite alternate;
+}
+.cloud-1 { --c: 98 42 220;  --a: 0.26; --k: cloud-1; --dur: 21s; left: -20vw; top: 2vh;  width: 58vw; height: 50vw; }
+.cloud-2 { --c: 88 40 200;  --a: 0.17; --k: cloud-2; --dur: 25s; --dl: -9s;  right: -14vw; top: -26vh; width: 52vw; height: 40vw; }
+.cloud-3 { --c: 104 44 232; --a: 0.23; --k: cloud-3; --dur: 23s; --dl: -14s; right: -24vw; top: 30vh;  width: 52vw; height: 52vw; }
+.cloud-4 { --c: 98 42 220;  --a: 0.22; --k: cloud-4; --dur: 27s; --dl: -5s;  left: -14vw;  bottom: -30vh; width: 62vw; height: 42vw; }
+.cloud-5 { --c: 70 56 224;  --a: 0.065;  --k: cloud-5; --dur: 31s; --dl: -11s; left: 18vw;   top: 38vh;   width: 46vw; height: 32vw; }
+.cloud-6 { --c: 160 74 255; --a: 0.052; --k: cloud-6; --dur: 29s; --dl: -17s; left: 36vw;   top: -18vh;  width: 40vw; height: 28vw; }
+.cloud-7 { --c: 176 140 255; --a: 0.039; --k: cloud-7; --dur: 38s; --dl: -18s; left: 6vw;   top: 22vh;   width: 42vw; height: 30vw; }
+.cloud-8 { --c: 60 44 196;  --a: 0.17; --k: cloud-8; --dur: 26s; --dl: -3s;  right: -10vw; bottom: -24vh; width: 46vw; height: 34vw; }
+
+/* Light shafts: wide, very faint diagonal bands that slide across. */
+.ray {
+  position: absolute;
+  top: -25vh;
+  height: 150vh;
+  background: linear-gradient(90deg, transparent, rgb(196 160 255 / var(--ra)), transparent);
+  will-change: transform, opacity;
+}
+.ray-1 { --ra: 0.03;  left: 4vw;  width: 24vw; transform: rotate(24deg); animation: ray-1 22s ease-in-out infinite alternate; }
+
+/* Starfield: one static layer of dim stars (box-shadows on a 1px element) plus a few bright
+ * stars that twinkle on their own tiny layers. */
+.stars {
+  position: absolute;
+  inset: 0;
+}
+.stars > i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  border-radius: 9999px;
+  box-shadow:
+    45.2vw 56.0vh 0 0 rgb(230 220 255 / 0.55),
+    50.8vw 58.7vh 0 0 rgb(255 255 255 / 0.7),
+    47.6vw 61.4vh 0 0 rgb(255 255 255 / 0.4),
+    44.7vw 14.2vh 0 0 rgb(255 255 255 / 0.7),
+    98.2vw 96.5vh 0 0 rgb(255 255 255 / 0.7),
+    1.5vw 52.8vh 0 0 rgb(255 255 255 / 0.4),
+    19.0vw 24.2vh 0 0 rgb(255 255 255 / 0.55),
+    32.6vw 59.1vh 0 0 rgb(255 255 255 / 0.7),
+    23.4vw 29.4vh 0 0 rgb(255 255 255 / 0.7),
+    8.5vw 65.5vh 0 0 rgb(230 220 255 / 0.7),
+    99.6vw 84.0vh 0 0 rgb(230 220 255 / 0.55),
+    75.8vw 51.3vh 0 0 rgb(255 255 255 / 0.4),
+    56.3vw 10.8vh 0 0 rgb(255 255 255 / 0.55),
+    38.7vw 95.8vh 0 0 rgb(255 255 255 / 0.4),
+    21.0vw 91.0vh 0 0 rgb(230 220 255 / 0.55),
+    98.0vw 39.7vh 0 0 rgb(255 255 255 / 0.7),
+    62.9vw 77.9vh 0 0 rgb(230 220 255 / 0.55),
+    8.7vw 33.3vh 0 0 rgb(230 220 255 / 0.4),
+    13.5vw 70.7vh 0 0 rgb(255 255 255 / 0.4),
+    46.5vw 48.7vh 0 0 rgb(255 255 255 / 0.55),
+    50.9vw 98.5vh 0 0 rgb(255 255 255 / 0.55),
+    64.4vw 11.7vh 0 0 rgb(230 220 255 / 0.4),
+    0.0vw 86.4vh 0 0 rgb(230 220 255 / 0.4),
+    21.1vw 39.4vh 0 0 rgb(255 255 255 / 0.4),
+    98.9vw 21.3vh 0 0 rgb(230 220 255 / 0.4),
+    77.3vw 32.9vh 0 0 rgb(230 220 255 / 0.55),
+    7.3vw 9.0vh 0 0 rgb(255 255 255 / 0.4),
+    60.1vw 37.2vh 0 0 rgb(230 220 255 / 0.4),
+    95.9vw 48.4vh 0 0 rgb(255 255 255 / 0.55),
+    18.3vw 15.4vh 0 0 rgb(255 255 255 / 0.7),
+    24.9vw 19.0vh 0 0 rgb(255 255 255 / 0.7),
+    95.0vw 88.2vh 0 0 rgb(255 255 255 / 0.55),
+    4.7vw 10.9vh 0 0 rgb(230 220 255 / 0.4),
+    74.0vw 39.2vh 0 0 rgb(230 220 255 / 0.7),
+    49.1vw 52.0vh 0 0 rgb(255 255 255 / 0.4),
+    22.8vw 55.9vh 0 0 rgb(255 255 255 / 0.55),
+    21.2vw 91.5vh 0 0 rgb(255 255 255 / 0.4),
+    26.9vw 44.6vh 0 0 rgb(255 255 255 / 0.4),
+    17.6vw 36.9vh 0 0 rgb(255 255 255 / 0.4),
+    36.2vw 89.1vh 0 0 rgb(230 220 255 / 0.7),
+    92.5vw 94.9vh 0 0.5px rgb(255 255 255 / 0.55),
+    59.2vw 42.4vh 0 0.5px rgb(190 160 255 / 0.75),
+    13.0vw 19.2vh 0 0.5px rgb(214 190 255 / 0.55),
+    22.1vw 45.5vh 0 0.5px rgb(255 255 255 / 0.55),
+    8.6vw 71.0vh 0 0.5px rgb(214 190 255 / 0.55),
+    51.3vw 73.4vh 0 0.5px rgb(214 190 255 / 0.55),
+    20.6vw 3.5vh 0 0.5px rgb(214 190 255 / 0.9),
+    17.2vw 21.6vh 0 0.5px rgb(190 160 255 / 0.75),
+    56.6vw 86.0vh 0 0.5px rgb(190 160 255 / 0.75),
+    66.1vw 31.4vh 0 0.5px rgb(255 255 255 / 0.75),
+    17.8vw 48.3vh 0 0.5px rgb(214 190 255 / 0.9),
+    64.2vw 18.2vh 0 0.5px rgb(255 255 255 / 0.9),
+    32.3vw 81.6vh 0 0.5px rgb(255 255 255 / 0.9),
+    11.4vw 9.9vh 0 0.5px rgb(255 255 255 / 0.9),
+    27.6vw 57.3vh 0 0.5px rgb(190 160 255 / 0.75),
+    10.9vw 90.0vh 0 0.5px rgb(190 160 255 / 0.75),
+    89.5vw 45.5vh 0 0.5px rgb(255 255 255 / 0.75),
+    15.0vw 62.0vh 0 0.5px rgb(255 255 255 / 0.9),
+    79.5vw 49.3vh 0 0.5px rgb(214 190 255 / 0.9),
+    14.2vw 74.5vh 0 0.5px rgb(255 255 255 / 0.75),
+    16.7vw 97.5vh 0 0.5px rgb(255 255 255 / 0.9),
+    41.6vw 2.3vh 0 0.5px rgb(255 255 255 / 0.9),
+    1.3vw 22.2vh 0 0.5px rgb(190 160 255 / 0.55),
+    53.9vw 98.8vh 0 0.5px rgb(190 160 255 / 0.55),
+    34.6vw 97.4vh 0 0.5px rgb(214 190 255 / 0.75),
+    19.3vw 7.6vh 0 0.5px rgb(214 190 255 / 0.9);
+}
+.tw {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s, 3px);
+  height: var(--s, 3px);
+  border-radius: 9999px;
+  background: rgb(226 208 255 / 0.75);
+  box-shadow: 0 0 6px 0 rgb(196 161 255 / 0.4);
+  animation: twinkle var(--p, 4s) ease-in-out var(--pd, 0s) infinite alternate;
+}
+
+/* Fine film grain: also hides banding in the dark gradients. */
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 220px 220px;
+}
+
+@keyframes aurora-in {
+  from { opacity: 0; }
+}
+@keyframes cloud-1 {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);          opacity: 0.85; }
+  50%  { transform: translate3d(22vw, 14vh, 0) rotate(16deg) scale(1.28); opacity: 1; }
+  100% { transform: translate3d(8vw, 30vh, 0) rotate(-10deg) scale(1.1);  opacity: 0.8; }
+}
+@keyframes cloud-2 {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);            opacity: 0.9; }
+  50%  { transform: translate3d(-24vw, 16vh, 0) rotate(-18deg) scale(1.22); opacity: 1; }
+  100% { transform: translate3d(-8vw, 34vh, 0) rotate(10deg) scale(1.12);   opacity: 0.8; }
+}
+@keyframes cloud-3 {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);            opacity: 0.9; }
+  50%  { transform: translate3d(-26vw, -16vh, 0) rotate(14deg) scale(1.25); opacity: 1; }
+  100% { transform: translate3d(-10vw, -30vh, 0) rotate(-12deg) scale(1.1); opacity: 0.8; }
+}
+@keyframes cloud-4 {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);           opacity: 0.9; }
+  50%  { transform: translate3d(24vw, -14vh, 0) rotate(-14deg) scale(1.2); opacity: 1; }
+  100% { transform: translate3d(10vw, -30vh, 0) rotate(12deg) scale(1.1);  opacity: 0.8; }
+}
+@keyframes cloud-5 {
+  0%   { transform: translate3d(0, 0, 0) rotate(-10deg) scale(1);          opacity: 0.7; }
+  50%  { transform: translate3d(26vw, -12vh, 0) rotate(20deg) scale(1.3);   opacity: 1; }
+  100% { transform: translate3d(-8vw, 14vh, 0) rotate(-16deg) scale(1.12);  opacity: 0.6; }
+}
+@keyframes cloud-6 {
+  0%   { transform: translate3d(0, 0, 0) rotate(8deg) scale(1);            opacity: 0.6; }
+  50%  { transform: translate3d(-22vw, 18vh, 0) rotate(-14deg) scale(1.3);  opacity: 1; }
+  100% { transform: translate3d(14vw, 30vh, 0) rotate(18deg) scale(1.1);    opacity: 0.55; }
+}
+@keyframes cloud-7 {
+  0%   { transform: translate3d(0, 0, 0) rotate(-6deg) scale(0.95);         opacity: 0.5; }
+  50%  { transform: translate3d(48vw, 10vh, 0) rotate(12deg) scale(1.3);     opacity: 1; }
+  100% { transform: translate3d(84vw, 22vh, 0) rotate(-8deg) scale(1.05);    opacity: 0.55; }
+}
+@keyframes cloud-8 {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1);            opacity: 0.85; }
+  50%  { transform: translate3d(-26vw, -14vh, 0) rotate(18deg) scale(1.25); opacity: 1; }
+  100% { transform: translate3d(-12vw, -28vh, 0) rotate(-10deg) scale(1.1); opacity: 0.8; }
+}
+@keyframes ray-1 {
+  from { transform: translate3d(-6vw, 0, 0) rotate(24deg);  opacity: 0.3; }
+  to   { transform: translate3d(46vw, 0, 0) rotate(24deg);  opacity: 1; }
+}
+@keyframes twinkle {
+  from { opacity: 0.35; }
+  to   { opacity: 1; }
+}
+
+/* ------------------------------------------------------------------ Home sky
+ * Home-only ambient layer: ringed planets, small ships, sparkles, light motes. Same thin-line
+ * language as the logo. It fades away as the page scrolls past the hero.
+ */
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: max(0, calc(1 - var(--sy, 0) / 850));
+  animation: sky-in 2400ms ease-out 700ms backwards;
+}
+@keyframes sky-in {
+  from { opacity: 0; }
+}
+
+.planet {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  opacity: var(--o, 0.5);
+  color: rgb(214 190 255);
+}
+.planet > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  animation: float var(--f, 10s) ease-in-out var(--fd, 0s) infinite alternate;
+}
+.ring-wobble {
+  transform-origin: 51px 46px;
+  animation: ring-wobble 12s ease-in-out infinite alternate;
+}
+@keyframes float {
+  from { transform: translate3d(0, -12px, 0) rotate(-5deg); }
+  to   { transform: translate3d(0, 14px, 0) rotate(5deg); }
+}
+@keyframes ring-wobble {
+  from { transform: rotate(-10deg); }
+  to   { transform: rotate(10deg); }
+}
+
+.fly {
+  position: absolute;
+  left: 0;
+  top: var(--y);
+  will-change: transform;
+  animation: fly-x var(--t) linear var(--dl, 0s) infinite;
+}
+.fly.rev {
+  animation-name: fly-x-rev;
+}
+.bob {
+  animation: bob var(--b, 8s) ease-in-out var(--bd, 0s) infinite alternate;
+}
+.ship {
+  position: relative;
+  width: var(--w);
+  color: rgb(222 204 255);
+  opacity: var(--o, 0.6);
+}
+.ship::before {
+  content: "";
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: calc(var(--w) * 2.6);
+  height: 1px;
+  background: linear-gradient(to left, rgb(196 161 255 / 0.6), transparent);
+}
+.ship.flip {
+  transform: scaleX(-1);
+}
+@keyframes fly-x {
+  from { transform: translate3d(-24vw, 0, 0); }
+  to   { transform: translate3d(124vw, 0, 0); }
+}
+@keyframes fly-x-rev {
+  from { transform: translate3d(124vw, 0, 0); }
+  to   { transform: translate3d(-24vw, 0, 0); }
+}
+@keyframes bob {
+  from { transform: translate3d(0, -18px, 0) rotate(-6deg); }
+  to   { transform: translate3d(0, 22px, 0) rotate(5deg); }
+}
+
+/* Hero watermark of the mark, fading in after the headline. */
+.orbit-mark {
+  animation: sky-in 2600ms ease-out 900ms backwards;
+}
+
+/* ------------------------------------------------------------------ Landing motion
+ * One orchestrated entrance for the hero, a slow sheen on the accent word, and sequences that
+ * mean something (the steps light up as the connector line reaches them).
+ */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+.reveal {
+  animation: reveal 1000ms cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) both;
+}
+
+@keyframes sheen {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+.text-sheen {
+  background-image: linear-gradient(100deg, #a98bff 0%, #e6d3ff 35%, #c4a1ff 55%, #a98bff 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sheen 7s ease-in-out infinite alternate;
+}
+
+/* Scroll-triggered sequences. Hidden state only applies when JS can run, so content never gets stuck. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .steps .step-line {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  .steps .step-node,
+  .steps .step-body {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.92);
+  }
+  .steps[data-inview="true"] .step-line {
+    transform: scaleX(1);
+    transition: transform 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.1s;
+  }
+  .steps[data-inview="true"] .step-node,
+  .steps[data-inview="true"] .step-body {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.7s ease,
+      transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: calc(var(--i) * 530ms + 150ms);
+  }
+  .steps[data-inview="true"] .step-body {
+    transition-delay: calc(var(--i) * 530ms + 320ms);
+  }
+
+  .checks .check-icon {
+    opacity: 0;
+    transform: scale(0.4) rotate(-20deg);
+  }
+  .checks[data-inview="true"] .check-icon {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.5s ease,
+      transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
+    transition-delay: calc(var(--i) * 150ms + 150ms);
+  }
+}
+
+/* A tiny ship rides the connector line while it draws (wide screens only: the line is hidden below lg). */
+.step-ship {
+  display: none;
+}
+@media (min-width: 1024px) and (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .step-ship {
+    display: block;
+    position: absolute;
+    left: 12.5%;
+    right: 12.5%;
+    top: 24px;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .step-ship > .ship {
+    position: absolute;
+    left: 0;
+    top: -7px;
+    --w: 40px;
+    --o: 0.9;
+    transform: translateX(-50%);
+  }
+  .steps[data-inview="true"] .step-ship {
+    animation: step-ship-vis 2.5s linear 0.1s both;
+  }
+  .steps[data-inview="true"] .step-ship > .ship {
+    animation: step-ship-ride 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
+  }
+}
+@keyframes step-ship-ride {
+  from { left: 0%; }
+  to   { left: 100%; }
+}
+@keyframes step-ship-vis {
+  0%   { opacity: 0; }
+  6%   { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .cloud,
+  .ray,
+  .tw,
+  .sky,
+  .planet > svg,
+  .ring-wobble,
+  .bob,
+  .orbit-mark,
+  .reveal,
+  .text-sheen {
+    animation: none !important;
+  }
+  .fly,
+  .smil {
+    display: none !important;
+  }
+  .layer {
+    transform: none !important;
+  }
+  .text-sheen {
+    background-image: linear-gradient(100deg, #e6d3ff, #a98bff);
+  }
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

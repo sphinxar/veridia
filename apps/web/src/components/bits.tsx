@@ -55,7 +55,7 @@ export function Address({ value, full = false }: { value: string | null | undefi
       <button
         type="button"
         aria-label="Copy address"
-        className="text-muted-foreground hover:text-navy-900"
+        className="text-muted-foreground hover:text-foreground"
         onClick={() => navigator.clipboard.writeText(value).then(() => toast.success("Copied"))}
       >
         <Copy className="size-3" />

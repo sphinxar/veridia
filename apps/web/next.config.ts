@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@veridia/domain", "@veridia/stellar-client", "@veridia/ui"],
   serverExternalPackages: ["pg"],
   poweredByHeader: false,
+  // Lets `next dev` serve assets/HMR through a Cloudflare quick tunnel.
+  allowedDevOrigins: ["*.trycloudflare.com"],
   async headers() {
     return [
       {

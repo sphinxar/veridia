@@ -1,0 +1,41 @@
+{
+  "network": "testnet",
+  "rpcUrl": "https://soroban-testnet.stellar.org",
+  "passphrase": "Test SDF Network ; September 2015",
+  "contracts": {
+    "escrow": "CD2S6HIQDFSJL74TUUIB7NVYCZN74AMD372Y4X32LVNAUF4ST6L4CTDM",
+    "registry": "CBL7R3QPBSCR7N3AGGPCOOEOSKU4KP4BPF6GTMJ42BFJMX2K6UQYXP5C",
+    "verification": "CCHWYZG4OTU34EUOXQ5CR5ODIR3567SLLVAYXJ52S6FGSEY3S7BVTGLA",
+    "token": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+  },
+  "admin": "GANWGURUCU7VLUETMFL7BJQBJLT5MPFKFKNB6TA6TLI6YWV5ZCVXR6IE",
+  "treasury": "GC3A5YZVCLNJ6MHRWYVN22KWKRABZCAPKYHTQQUTJXATSA747G5RSFWK",
+  "startLedger": 5116534,
+  "deployedAt": "2026-10-10T04:25:07.422Z",
+  "wasmHashes": {
+    "escrow": "f69bd72c8069a301f9fe6cc691e284f68ba30c9e65dd9e524b06e93b9c3a71c6",
+    "registry": "5e653fac31729cea2db016e8d297df7dbfdbdf348e053107fae615d99fe9b0c9",
+    "verification": "fcc000ad3b7a65f5771ab9dcac73fb90b9c77f5eded5d6c3bfc808f8734ca302"
+  },
+  "params": {
+    "verification": {
+      "panel_size": 5,
+      "quorum": 4,
+      "approval_threshold_bps": 6000,
+      "commit_period_secs": 60,
+      "reveal_period_secs": 60,
+      "appeal_window_secs": 60,
+      "appeal_panel_size": 5,
+      "appeal_bond": "100000000",
+      "no_show_slash_bps": 1000
+    },
+    "registry": {
+      "min_stake": "1000000000",
+      "lock_amount": "1000000000",
+      "unbonding_secs": 60
+    },
+    "escrow": {
+      "max_attempts": 3
+    }
+  }
+}

@@ -56,7 +56,7 @@ export default async function ProfilePage() {
                 {stakes.map((s) => (
                   <li key={s.id} className="flex items-center justify-between gap-2 py-2">
                     <span>
-                      <span className="font-medium capitalize text-navy-900">{s.kind.replace("_", " ")}</span>
+                      <span className="font-medium capitalize text-foreground">{s.kind.replace("_", " ")}</span>
                       {s.roundId && <span className="text-xs text-muted-foreground"> · round #{s.roundId}</span>}
                       <div><TxLink hash={s.txHash} /></div>
                     </span>

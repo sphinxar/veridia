@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Veridia">
+  <rect width="64" height="64" rx="16" fill="#0a0713"/>
+  <g fill="none" stroke="#d8c0ff" stroke-linecap="round" stroke-linejoin="round" transform="translate(32 32) scale(0.5) translate(-51 -46)">
+    <circle cx="51" cy="46" r="26.2" stroke-width="5"/>
+    <ellipse cx="51" cy="46" rx="39.1" ry="6.65" transform="rotate(-29 51 46)" stroke-width="5.4"/>
+  </g>
+</svg>

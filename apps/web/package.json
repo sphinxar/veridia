@@ -22,11 +22,13 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.1149.0",
     "@creit.tech/stellar-wallets-kit": "2.7.1",
+    "@fontsource-variable/inter": "5.3.0",
     "@hookform/resolvers": "5.9.1",
     "@stellar/stellar-sdk": "17.2.1",
     "@veridia/domain": "workspace:*",
     "@veridia/stellar-client": "workspace:*",
     "@veridia/ui": "workspace:*",
+    "dotenv": "17.4.2",
     "drizzle-orm": "0.45.4",
     "jose": "6.2.12",
     "lucide-react": "1.54.0",
@@ -35,10 +37,9 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "7.89.0",
+    "server-only": "0.0.1",
     "sonner": "2.0.8",
-    "zod": "4.6.5",
-    "dotenv": "17.4.2",
-    "server-only": "0.0.1"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

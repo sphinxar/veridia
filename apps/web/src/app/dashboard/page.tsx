@@ -86,7 +86,7 @@ export default async function DashboardPage() {
                   <li key={i}>
                     <Link href={a.href} className="flex items-start justify-between gap-2 rounded-md border border-border p-3 hover:bg-muted">
                       <span>
-                        <span className="block text-sm font-medium text-navy-900">{a.label}</span>
+                        <span className="block text-sm font-medium text-foreground">{a.label}</span>
                         <span className="text-xs text-muted-foreground">{a.detail}</span>
                       </span>
                       <ArrowRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" />

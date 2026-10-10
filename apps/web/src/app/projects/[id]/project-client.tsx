@@ -312,14 +312,14 @@ function MilestoneItem({ project, m }: { project: ProjectLite; m: MilestoneLite 
           m.index,
           now,
         );
-  const dot = { 0: "bg-slate-300", 1: "bg-amber-500", 2: "bg-emerald-600", 3: "bg-red-600" }[m.status] ?? "bg-slate-300";
+  const dot = { 0: "bg-white/30", 1: "bg-warning", 2: "bg-success", 3: "bg-danger" }[m.status] ?? "bg-white/30";
 
   return (
     <li className="relative" data-testid={`milestone-item-${m.index}`}>
       <span className={cn("absolute -left-[33px] top-1 size-4 rounded-full border-4 border-surface", dot)} aria-hidden />
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-semibold text-navy-900">
+          <p className="font-semibold text-foreground">
             {m.index + 1}. {m.title}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -327,14 +327,14 @@ function MilestoneItem({ project, m }: { project: ProjectLite; m: MilestoneLite 
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="tabular font-semibold text-navy-900">{money(m.amount, project.symbol)}</span>
+          <span className="tabular font-semibold text-foreground">{money(m.amount, project.symbol)}</span>
           <MilestoneStatusBadge status={m.status} />
         </div>
       </div>
       {m.description && <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{m.description}</p>}
 
       {m.status === MilestoneStatus.Paid && (
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-emerald-700">
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-success">
           <ShieldCheck className="size-4" /> Released to creator after final approval. Tx <TxLink hash={m.paidTx} />
         </p>
       )}
@@ -386,7 +386,7 @@ function MilestoneItem({ project, m }: { project: ProjectLite; m: MilestoneLite 
 
       {chainId && (isCurrent || m.evidenceHash) && m.status !== MilestoneStatus.Failed && (
         <details className="mt-3 rounded-md border border-border p-3" open={isCreator && isCurrent && m.status === MilestoneStatus.Pending}>
-          <summary className="cursor-pointer text-sm font-medium text-navy-900">Evidence</summary>
+          <summary className="cursor-pointer text-sm font-medium text-foreground">Evidence</summary>
           <div className="mt-3 space-y-3">
             <EvidencePanel
               projectId={project.id}

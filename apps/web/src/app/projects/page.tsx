@@ -44,7 +44,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
             href={`/projects?filter=${f.key}`}
             role="tab"
             aria-selected={filter === f.key}
-            className={cn("rounded-full border px-3 py-1 text-sm", filter === f.key ? "border-navy-900 bg-navy-900 text-white" : "border-border bg-surface text-muted-foreground hover:text-navy-900")}
+            className={cn("rounded-full border px-4 py-1.5 text-sm transition-colors", filter === f.key ? "border-accent/50 bg-primary-soft text-accent" : "border-white/10 bg-white/[0.03] text-muted-foreground hover:border-white/25 hover:text-foreground")}
           >
             {f.label}
           </Link>
@@ -71,7 +71,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
                       <ProjectStatusBadge status={p.status} sync={p.syncStatus} />
                     </div>
                     <div>
-                      <h2 className="font-semibold text-navy-900 group-hover:text-primary">{p.title}</h2>
+                      <h2 className="font-semibold text-foreground group-hover:text-primary">{p.title}</h2>
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.summary}</p>
                     </div>
                     <div className="mt-auto space-y-2">
@@ -81,7 +81,7 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
                       </div>
                       <Progress value={pct} label="Funding progress" />
                       <p className="text-xs text-muted-foreground">
-                        Released <span className="tabular font-medium text-navy-900">{money(p.released, sym)}</span> · Funding until {date(p.fundingDeadline)}
+                        Released <span className="tabular font-medium text-foreground">{money(p.released, sym)}</span> · Funding until {date(p.fundingDeadline)}
                       </p>
                     </div>
                   </CardContent>
