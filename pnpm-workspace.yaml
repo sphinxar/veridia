@@ -14,3 +14,4 @@ allowBuilds:
   keccak: true
   usb: true
   secp256k1: true
+  "@reown/appkit": false

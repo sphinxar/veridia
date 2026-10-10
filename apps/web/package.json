@@ -1,0 +1,56 @@
+{
+  "name": "@veridia/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./db": "./src/db/index.ts",
+    "./db/schema": "./src/db/schema.ts",
+    "./server/projections": "./src/server/projections.ts",
+    "./db/load-env": "./src/db/load-env.ts"
+  },
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.1149.0",
+    "@creit.tech/stellar-wallets-kit": "2.7.1",
+    "@hookform/resolvers": "5.9.1",
+    "@stellar/stellar-sdk": "17.2.1",
+    "@veridia/domain": "workspace:*",
+    "@veridia/stellar-client": "workspace:*",
+    "@veridia/ui": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "jose": "6.2.12",
+    "lucide-react": "1.54.0",
+    "next": "16.4.0",
+    "pg": "8.23.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-hook-form": "7.89.0",
+    "sonner": "2.0.8",
+    "zod": "4.6.5",
+    "dotenv": "17.4.2"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@playwright/test": "1.64.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.20.5",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "drizzle-kit": "0.31.11",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}
