@@ -525,15 +525,19 @@ impl Verification {
         r.finalized_at = now;
         save_round(&env, &r);
 
-        let registry = RegistryClient::new(&env, &cfg.registry);
+        let mut conducts = Vec::new(&env);
         for member in r.panel.iter() {
-            let conduct = match load_vote(&env, round_id, &member) {
+            conducts.push_back(match load_vote(&env, round_id, &member) {
                 None => Conduct::NoCommit,
                 Some(v) if !v.revealed => Conduct::NoReveal,
                 Some(_) => Conduct::Revealed,
-            };
-            registry.release(&member, &round_id, &conduct, &r.no_show_slash_bps);
+            });
         }
+        RegistryClient::new(&env, &cfg.registry).release_panel(
+            &round_id,
+            &conducts,
+            &r.no_show_slash_bps,
+        );
 
         let appealable_until = if r.kind == RoundKind::Original && outcome.is_decisive() {
             now + r.appeal_window_secs
@@ -724,9 +728,8 @@ impl Verification {
         let id = Self::round_count(env.clone()) + 1;
         env.storage().instance().set(&DataKey::RoundCount, &id);
         bump_instance(env);
-        for member in panel.iter() {
-            registry.lock(&member, &id);
-        }
+        // Single call with a footprint independent of the selection (see RegistryInterface).
+        registry.lock_panel(&id, &panel);
 
         let now = env.ledger().timestamp();
         let p = &cfg.params;

@@ -123,6 +123,12 @@ of the original panel), shuffles the remainder with Soroban's on-chain PRNG
 event, so every assignment is auditable. See the threat model for PRNG limitations — this
 is **not** a trustless randomness beacon.
 
+Implementation note: because the PRNG seed used during transaction *simulation* differs
+from the one used during *execution*, the panel cannot be predicted from a simulation.
+The registry therefore keeps all verifier records in a single storage entry and locks
+stake per round (`lock_panel` / `release_panel`), so the transaction footprint does not
+depend on which verifiers are selected.
+
 ### 5.2 Commit-reveal (Rules 2–4)
 
 ```

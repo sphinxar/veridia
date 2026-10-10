@@ -118,54 +118,100 @@ fn eligibility_requires_min_stake_and_active() {
     let _ = low;
 }
 
+fn panel(env: &Env, members: &[&Address]) -> Vec<Address> {
+    let mut v = Vec::new(env);
+    for m in members {
+        v.push_back((*m).clone());
+    }
+    v
+}
+
+fn conducts(env: &Env, c: &[Conduct]) -> Vec<Conduct> {
+    let mut v = Vec::new(env);
+    for x in c {
+        v.push_back(*x);
+    }
+    v
+}
+
 #[test]
 fn lock_requires_verification_contract_auth() {
     let s = setup();
     let v = staked_verifier(&s, 200);
+    let p = panel(&s.env, &[&v]);
     // Only the verifier (not the verification contract) authorizes: must fail.
     s.env.mock_auths(&[MockAuth {
         address: &v,
         invoke: &MockAuthInvoke {
             contract: &s.reg.address,
-            fn_name: "lock",
-            args: (v.clone(), 1u64).into_val(&s.env),
+            fn_name: "lock_panel",
+            args: (1u64, p.clone()).into_val(&s.env),
             sub_invokes: &[],
         },
     }]);
-    assert!(s.reg.try_lock(&v, &1).is_err());
+    assert!(s.reg.try_lock_panel(&1, &p).is_err());
 
     s.env.mock_all_auths();
-    s.reg.lock(&v, &1);
+    s.reg.lock_panel(&1, &p);
     let auths = s.env.auths();
     assert_eq!(auths[0].0, s.verification);
     assert_eq!(
         auths[0].1.function,
         AuthorizedFunction::Contract((
             s.reg.address.clone(),
-            soroban_sdk::Symbol::new(&s.env, "lock"),
-            (v.clone(), 1u64).into_val(&s.env)
+            soroban_sdk::Symbol::new(&s.env, "lock_panel"),
+            (1u64, p.clone()).into_val(&s.env)
         ))
     );
+}
+
+#[test]
+fn release_requires_verification_contract_auth() {
+    let s = setup();
+    let v = staked_verifier(&s, 200);
+    s.reg.lock_panel(&1, &panel(&s.env, &[&v]));
+    let c = conducts(&s.env, &[Conduct::NoReveal]);
+    s.env.mock_auths(&[MockAuth {
+        address: &v,
+        invoke: &MockAuthInvoke {
+            contract: &s.reg.address,
+            fn_name: "release_panel",
+            args: (1u64, c.clone(), 0u32).into_val(&s.env),
+            sub_invokes: &[],
+        },
+    }]);
+    assert!(s.reg.try_release_panel(&1, &c, &0).is_err());
 }
 
 #[test]
 fn lock_reduces_free_stake_and_blocks_unstake() {
     let s = setup();
     let v = staked_verifier(&s, 150);
-    s.reg.lock(&v, &7);
+    s.reg.lock_panel(&7, &panel(&s.env, &[&v]));
     let rec = s.reg.get_verifier(&v).unwrap();
     assert_eq!(rec.locked, 100);
     assert_eq!(rec.active_rounds, 1);
-    // free stake is 50: below lock amount -> no longer eligible, cannot double lock
+    assert_eq!(s.reg.get_lock(&v, &7), 100);
+    // free stake is 50: below lock amount -> no longer eligible, cannot lock again
     assert_eq!(s.reg.eligible().len(), 0);
-    assert_eq!(s.reg.try_lock(&v, &8), Err(Ok(ce(Error::NotEligible))));
-    assert_eq!(s.reg.try_lock(&v, &7), Err(Ok(ce(Error::AlreadyLocked))));
+    assert_eq!(s.reg.try_lock_panel(&8, &panel(&s.env, &[&v])), Err(Ok(ce(Error::NotEligible))));
+    assert_eq!(s.reg.try_lock_panel(&7, &panel(&s.env, &[&v])), Err(Ok(ce(Error::AlreadyLocked))));
     // cannot unstake locked stake
     assert_eq!(
         s.reg.try_request_unstake(&v, &51),
         Err(Ok(ce(Error::InsufficientFreeStake)))
     );
     s.reg.request_unstake(&v, &50);
+}
+
+#[test]
+fn lock_unregistered_fails() {
+    let s = setup();
+    let stranger = Address::generate(&s.env);
+    assert_eq!(
+        s.reg.try_lock_panel(&1, &panel(&s.env, &[&stranger])),
+        Err(Ok(ce(Error::NotRegistered)))
+    );
 }
 
 #[test]
@@ -188,29 +234,44 @@ fn unbonding_delay_enforced() {
 }
 
 #[test]
-fn release_without_misconduct_does_not_slash() {
+fn release_slashes_only_no_shows_to_treasury() {
     let s = setup();
-    let v = staked_verifier(&s, 100);
-    s.reg.lock(&v, &1);
-    assert_eq!(s.reg.release(&v, &1, &Conduct::Revealed, &1000), 0);
-    let rec = s.reg.get_verifier(&v).unwrap();
-    assert_eq!((rec.stake, rec.locked, rec.rounds_revealed), (100, 0, 1));
-    assert_eq!(s.reg.try_release(&v, &1, &Conduct::Revealed, &0), Err(Ok(ce(Error::LockNotFound))));
+    let a = staked_verifier(&s, 200);
+    let b = staked_verifier(&s, 200);
+    let c = staked_verifier(&s, 200);
+    s.reg.lock_panel(&3, &panel(&s.env, &[&a, &b, &c]));
+    let slashed = s.reg.release_panel(
+        &3,
+        &conducts(&s.env, &[Conduct::Revealed, Conduct::NoReveal, Conduct::NoCommit]),
+        &1000,
+    );
+    assert_eq!(slashed, 20);
+    let ra = s.reg.get_verifier(&a).unwrap();
+    let rb = s.reg.get_verifier(&b).unwrap();
+    assert_eq!((ra.stake, ra.locked, ra.rounds_revealed, ra.no_shows), (200, 0, 1, 0));
+    assert_eq!((rb.stake, rb.locked, rb.no_shows, rb.total_slashed), (190, 0, 1, 10));
+    assert_eq!(s.token.balance(&s.treasury), 20);
+    assert_eq!(s.token.balance(&s.reg.address), 580);
+    assert_eq!(s.reg.get_lock(&a, &3), 0);
+    // Released once only.
+    assert_eq!(
+        s.reg.try_release_panel(&3, &conducts(&s.env, &[Conduct::Revealed; 3]), &0),
+        Err(Ok(ce(Error::LockNotFound)))
+    );
 }
 
 #[test]
-fn no_show_is_slashed_to_treasury() {
+fn release_validates_inputs() {
     let s = setup();
-    let v = staked_verifier(&s, 200);
-    s.reg.lock(&v, &3);
-    assert_eq!(s.reg.release(&v, &3, &Conduct::NoReveal, &1000), 10);
-    let rec = s.reg.get_verifier(&v).unwrap();
-    assert_eq!((rec.stake, rec.locked, rec.no_shows, rec.total_slashed), (190, 0, 1, 10));
-    assert_eq!(s.token.balance(&s.treasury), 10);
-    assert_eq!(s.token.balance(&s.reg.address), 190);
+    let a = staked_verifier(&s, 200);
+    s.reg.lock_panel(&3, &panel(&s.env, &[&a]));
     assert_eq!(
-        s.reg.try_release(&v, &3, &Conduct::NoCommit, &10_001),
+        s.reg.try_release_panel(&3, &conducts(&s.env, &[Conduct::NoCommit]), &10_001),
         Err(Ok(ce(Error::InvalidSlash)))
+    );
+    assert_eq!(
+        s.reg.try_release_panel(&3, &conducts(&s.env, &[]), &0),
+        Err(Ok(ce(Error::InvalidParams)))
     );
 }
 

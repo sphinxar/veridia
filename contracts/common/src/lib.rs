@@ -72,12 +72,18 @@ pub trait EscrowInterface {
 }
 
 /// Interface of VerifierRegistry used by Verification.
+///
+/// Locking and releasing work on a whole panel at once and touch only storage keys
+/// that are independent of *which* verifiers were selected. This matters because
+/// panels are drawn with the PRNG, whose seed differs between simulation and
+/// execution: a footprint that depended on the selected addresses would make the
+/// transaction fail on-chain.
 #[contractclient(name = "RegistryClient")]
 pub trait RegistryInterface {
     fn eligible(env: Env) -> Vec<Address>;
-    fn lock(env: Env, verifier: Address, round_id: u64) -> i128;
-    fn release(env: Env, verifier: Address, round_id: u64, conduct: Conduct, slash_bps: u32)
-        -> i128;
+    fn lock_panel(env: Env, round_id: u64, panel: Vec<Address>) -> i128;
+    /// `conducts[i]` refers to the i-th panel member passed to `lock_panel`.
+    fn release_panel(env: Env, round_id: u64, conducts: Vec<Conduct>, slash_bps: u32) -> i128;
     fn stake_token(env: Env) -> Address;
 }
 

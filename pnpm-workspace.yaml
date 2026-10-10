@@ -1,0 +1,16 @@
+packages:
+  - apps/*
+  - packages/*
+  - services/*
+
+# Packages allowed to run install scripts (pnpm blocks others by default).
+allowBuilds:
+  esbuild: true
+  sharp: true
+  "@parcel/watcher": true
+  protobufjs: true
+  bufferutil: true
+  utf-8-validate: true
+  keccak: true
+  usb: true
+  secp256k1: true

@@ -5,7 +5,7 @@
 
 use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, contracttype, panic_with_error, token,
-    Address, BytesN, Env, Vec,
+    Address, BytesN, Env, Map, Vec,
 };
 use veridia_common::{apply_bps, bump_instance, Conduct, BPS, PERSISTENT_BUMP, PERSISTENT_THRESHOLD};
 
@@ -70,13 +70,24 @@ pub struct Verifier {
     pub total_slashed: i128,
 }
 
+/// Stake locked for one round's panel.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RoundLock {
+    pub amount: i128,
+    pub members: Vec<Address>,
+}
+
+/// Storage layout: all verifier records live in ONE map entry and locks are keyed by
+/// round id only, so the storage footprint of `lock_panel` / `release_panel` does not
+/// depend on which verifiers the PRNG selected (see RegistryInterface docs).
+/// Trade-off: the registry is bounded by the max entry size (≈ a few hundred verifiers).
 #[contracttype]
 #[derive(Clone)]
 enum DataKey {
     Config,
-    Verifier(Address),
-    VerifierList,
-    Lock(Address, u64),
+    Verifiers,
+    RoundLock(u64),
 }
 
 // ---------------------------------------------------------------- events
@@ -158,25 +169,30 @@ fn validate_params(env: &Env, p: &RegistryParams) {
     }
 }
 
-fn load_verifier(env: &Env, who: &Address) -> Verifier {
-    let key = DataKey::Verifier(who.clone());
-    let v: Verifier = env
-        .storage()
-        .persistent()
-        .get(&key)
-        .unwrap_or_else(|| panic_with_error!(env, Error::NotRegistered));
-    env.storage()
-        .persistent()
-        .extend_ttl(&key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
-    v
+fn all_verifiers(env: &Env) -> Map<Address, Verifier> {
+    let key = DataKey::Verifiers;
+    match env.storage().persistent().get(&key) {
+        Some(m) => {
+            env.storage()
+                .persistent()
+                .extend_ttl(&key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
+            m
+        }
+        None => Map::new(env),
+    }
 }
 
-fn save_verifier(env: &Env, who: &Address, v: &Verifier) {
-    let key = DataKey::Verifier(who.clone());
-    env.storage().persistent().set(&key, v);
+fn save_all(env: &Env, m: &Map<Address, Verifier>) {
+    let key = DataKey::Verifiers;
+    env.storage().persistent().set(&key, m);
     env.storage()
         .persistent()
         .extend_ttl(&key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
+}
+
+fn get_or_fail(env: &Env, m: &Map<Address, Verifier>, who: &Address) -> Verifier {
+    m.get(who.clone())
+        .unwrap_or_else(|| panic_with_error!(env, Error::NotRegistered))
 }
 
 fn required_free_stake(p: &RegistryParams) -> i128 {
@@ -189,13 +205,6 @@ fn required_free_stake(p: &RegistryParams) -> i128 {
 
 fn is_eligible(v: &Verifier, p: &RegistryParams) -> bool {
     v.active && v.stake - v.locked >= required_free_stake(p)
-}
-
-fn verifier_list(env: &Env) -> Vec<Address> {
-    env.storage()
-        .persistent()
-        .get(&DataKey::VerifierList)
-        .unwrap_or_else(|| Vec::new(env))
 }
 
 // ---------------------------------------------------------------- contract
@@ -246,8 +255,8 @@ impl VerifierRegistry {
     pub fn register(env: Env, verifier: Address, metadata_hash: BytesN<32>) {
         verifier.require_auth();
         config(&env);
-        let key = DataKey::Verifier(verifier.clone());
-        if env.storage().persistent().has(&key) {
+        let mut all = all_verifiers(&env);
+        if all.contains_key(verifier.clone()) {
             panic_with_error!(&env, Error::AlreadyRegistered);
         }
         let v = Verifier {
@@ -264,13 +273,8 @@ impl VerifierRegistry {
             active_rounds: 0,
             total_slashed: 0,
         };
-        save_verifier(&env, &verifier, &v);
-        let mut list = verifier_list(&env);
-        list.push_back(verifier.clone());
-        env.storage().persistent().set(&DataKey::VerifierList, &list);
-        env.storage()
-            .persistent()
-            .extend_ttl(&DataKey::VerifierList, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
+        all.set(verifier.clone(), v);
+        save_all(&env, &all);
         bump_instance(&env);
         VerifierRegistered {
             verifier,
@@ -285,9 +289,11 @@ impl VerifierRegistry {
             panic_with_error!(&env, Error::InvalidAmount);
         }
         let cfg = config(&env);
-        let mut v = load_verifier(&env, &verifier);
+        let mut all = all_verifiers(&env);
+        let mut v = get_or_fail(&env, &all, &verifier);
         v.stake += amount;
-        save_verifier(&env, &verifier, &v);
+        all.set(verifier.clone(), v.clone());
+        save_all(&env, &all);
         token::Client::new(&env, &cfg.stake_token).transfer(
             &verifier,
             &env.current_contract_address(),
@@ -304,9 +310,11 @@ impl VerifierRegistry {
     /// Opt in/out of new assignments. Existing locks are unaffected.
     pub fn set_active(env: Env, verifier: Address, active: bool) {
         verifier.require_auth();
-        let mut v = load_verifier(&env, &verifier);
+        let mut all = all_verifiers(&env);
+        let mut v = get_or_fail(&env, &all, &verifier);
         v.active = active;
-        save_verifier(&env, &verifier, &v);
+        all.set(verifier.clone(), v.clone());
+        save_all(&env, &all);
         VerifierStatusChanged { verifier, active }.publish(&env);
     }
 
@@ -318,14 +326,16 @@ impl VerifierRegistry {
             panic_with_error!(&env, Error::InvalidAmount);
         }
         let cfg = config(&env);
-        let mut v = load_verifier(&env, &verifier);
+        let mut all = all_verifiers(&env);
+        let mut v = get_or_fail(&env, &all, &verifier);
         if amount > v.stake - v.locked {
             panic_with_error!(&env, Error::InsufficientFreeStake);
         }
         v.stake -= amount;
         v.unbonding += amount;
         v.unbond_at = env.ledger().timestamp() + cfg.params.unbonding_secs;
-        save_verifier(&env, &verifier, &v);
+        all.set(verifier.clone(), v.clone());
+        save_all(&env, &all);
         UnstakeRequested {
             verifier,
             amount,
@@ -337,7 +347,8 @@ impl VerifierRegistry {
     pub fn withdraw(env: Env, verifier: Address) -> i128 {
         verifier.require_auth();
         let cfg = config(&env);
-        let mut v = load_verifier(&env, &verifier);
+        let mut all = all_verifiers(&env);
+        let mut v = get_or_fail(&env, &all, &verifier);
         if v.unbonding <= 0 {
             panic_with_error!(&env, Error::NothingToWithdraw);
         }
@@ -347,7 +358,8 @@ impl VerifierRegistry {
         let amount = v.unbonding;
         v.unbonding = 0;
         v.unbond_at = 0;
-        save_verifier(&env, &verifier, &v);
+        all.set(verifier.clone(), v.clone());
+        save_all(&env, &all);
         token::Client::new(&env, &cfg.stake_token).transfer(
             &env.current_contract_address(),
             &verifier,
@@ -359,88 +371,103 @@ impl VerifierRegistry {
 
     // ------------------------------------------------------------ verification-only
 
-    /// Lock `lock_amount` of the verifier's stake for `round_id`.
-    pub fn lock(env: Env, verifier: Address, round_id: u64) -> i128 {
+    /// Lock `lock_amount` of each panel member's stake for `round_id`.
+    pub fn lock_panel(env: Env, round_id: u64, panel: Vec<Address>) -> i128 {
         let cfg = config(&env);
         cfg.verification.require_auth();
-        let lock_key = DataKey::Lock(verifier.clone(), round_id);
+        let lock_key = DataKey::RoundLock(round_id);
         if env.storage().persistent().has(&lock_key) {
             panic_with_error!(&env, Error::AlreadyLocked);
         }
-        let mut v = load_verifier(&env, &verifier);
-        if !is_eligible(&v, &cfg.params) {
-            panic_with_error!(&env, Error::NotEligible);
-        }
         let amount = cfg.params.lock_amount;
-        v.locked += amount;
-        v.rounds_assigned += 1;
-        v.active_rounds += 1;
-        save_verifier(&env, &verifier, &v);
-        env.storage().persistent().set(&lock_key, &amount);
+        let mut all = all_verifiers(&env);
+        for member in panel.iter() {
+            let mut v = get_or_fail(&env, &all, &member);
+            if !is_eligible(&v, &cfg.params) {
+                panic_with_error!(&env, Error::NotEligible);
+            }
+            v.locked += amount;
+            v.rounds_assigned += 1;
+            v.active_rounds += 1;
+            all.set(member.clone(), v);
+            StakeLocked {
+                verifier: member,
+                round_id,
+                amount,
+            }
+            .publish(&env);
+        }
+        save_all(&env, &all);
+        env.storage().persistent().set(
+            &lock_key,
+            &RoundLock {
+                amount,
+                members: panel,
+            },
+        );
         env.storage()
             .persistent()
             .extend_ttl(&lock_key, PERSISTENT_THRESHOLD, PERSISTENT_BUMP);
-        StakeLocked {
-            verifier,
-            round_id,
-            amount,
-        }
-        .publish(&env);
         amount
     }
 
-    /// Release the lock for `round_id`. Misconduct (`NoCommit` / `NoReveal`) is slashed
-    /// by `slash_bps` of the locked amount and sent to the treasury. Returns the slash.
-    pub fn release(
-        env: Env,
-        verifier: Address,
-        round_id: u64,
-        conduct: Conduct,
-        slash_bps: u32,
-    ) -> i128 {
+    /// Release the panel locks for `round_id`. `conducts[i]` is the conduct of the i-th
+    /// locked member. Misconduct (`NoCommit` / `NoReveal`) is slashed by `slash_bps` of
+    /// the locked amount and sent to the treasury. Returns the total slashed.
+    pub fn release_panel(env: Env, round_id: u64, conducts: Vec<Conduct>, slash_bps: u32) -> i128 {
         let cfg = config(&env);
         cfg.verification.require_auth();
         if slash_bps > BPS {
             panic_with_error!(&env, Error::InvalidSlash);
         }
-        let lock_key = DataKey::Lock(verifier.clone(), round_id);
-        let amount: i128 = env
+        let lock_key = DataKey::RoundLock(round_id);
+        let lock: RoundLock = env
             .storage()
             .persistent()
             .get(&lock_key)
             .unwrap_or_else(|| panic_with_error!(&env, Error::LockNotFound));
+        if conducts.len() != lock.members.len() {
+            panic_with_error!(&env, Error::InvalidParams);
+        }
         env.storage().persistent().remove(&lock_key);
 
-        let mut v = load_verifier(&env, &verifier);
-        let slashed = match conduct {
-            Conduct::Revealed => 0,
-            Conduct::NoCommit | Conduct::NoReveal => apply_bps(amount, slash_bps),
-        };
-        v.locked -= amount;
-        v.stake -= slashed;
-        v.active_rounds -= 1;
-        v.total_slashed += slashed;
-        match conduct {
-            Conduct::Revealed => v.rounds_revealed += 1,
-            _ => v.no_shows += 1,
+        let mut all = all_verifiers(&env);
+        let mut total_slashed: i128 = 0;
+        for (i, member) in lock.members.iter().enumerate() {
+            let conduct = conducts.get(i as u32).unwrap();
+            let mut v = get_or_fail(&env, &all, &member);
+            let slashed = match conduct {
+                Conduct::Revealed => 0,
+                Conduct::NoCommit | Conduct::NoReveal => apply_bps(lock.amount, slash_bps),
+            };
+            v.locked -= lock.amount;
+            v.stake -= slashed;
+            v.active_rounds -= 1;
+            v.total_slashed += slashed;
+            match conduct {
+                Conduct::Revealed => v.rounds_revealed += 1,
+                _ => v.no_shows += 1,
+            }
+            all.set(member.clone(), v);
+            total_slashed += slashed;
+            StakeReleased {
+                verifier: member,
+                round_id,
+                amount: lock.amount,
+                slashed,
+                conduct,
+            }
+            .publish(&env);
         }
-        save_verifier(&env, &verifier, &v);
-        if slashed > 0 {
+        save_all(&env, &all);
+        if total_slashed > 0 {
             token::Client::new(&env, &cfg.stake_token).transfer(
                 &env.current_contract_address(),
                 &cfg.treasury,
-                &slashed,
+                &total_slashed,
             );
         }
-        StakeReleased {
-            verifier,
-            round_id,
-            amount,
-            slashed,
-            conduct,
-        }
-        .publish(&env);
-        slashed
+        total_slashed
     }
 
     // ------------------------------------------------------------ views
@@ -449,35 +476,29 @@ impl VerifierRegistry {
     pub fn eligible(env: Env) -> Vec<Address> {
         let cfg = config(&env);
         let mut out = Vec::new(&env);
-        for addr in verifier_list(&env).iter() {
-            let v: Option<Verifier> = env
-                .storage()
-                .persistent()
-                .get(&DataKey::Verifier(addr.clone()));
-            if let Some(v) = v {
-                if is_eligible(&v, &cfg.params) {
-                    out.push_back(addr);
-                }
+        for (addr, v) in all_verifiers(&env).iter() {
+            if is_eligible(&v, &cfg.params) {
+                out.push_back(addr);
             }
         }
         out
     }
 
     pub fn get_verifier(env: Env, verifier: Address) -> Option<Verifier> {
-        env.storage()
-            .persistent()
-            .get(&DataKey::Verifier(verifier))
+        all_verifiers(&env).get(verifier)
     }
 
     pub fn verifiers(env: Env) -> Vec<Address> {
-        verifier_list(&env)
+        all_verifiers(&env).keys()
     }
 
+    /// Amount locked for `verifier` in `round_id` (0 if none).
     pub fn get_lock(env: Env, verifier: Address, round_id: u64) -> i128 {
-        env.storage()
-            .persistent()
-            .get(&DataKey::Lock(verifier, round_id))
-            .unwrap_or(0)
+        let lock: Option<RoundLock> = env.storage().persistent().get(&DataKey::RoundLock(round_id));
+        match lock {
+            Some(l) if l.members.iter().any(|m| m == verifier) => l.amount,
+            _ => 0,
+        }
     }
 
     pub fn stake_token(env: Env) -> Address {

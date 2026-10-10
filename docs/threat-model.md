@@ -45,6 +45,8 @@
 | T17 | Indexer replays / duplicates | Unique RPC event id; projections idempotent | RPC event retention window (≈7 days on testnet) — longer outages require state reconciliation (implemented for projects/rounds) |
 | T18 | Timestamp manipulation | Periods are minutes-to-days; validator drift is seconds | Very short demo periods are more sensitive |
 | T19 | Refund rounding | Integer division, dust stays in contract | Up to `funders − 1` units per project remain locked |
+| T21 | Panel selection vs. transaction footprint | The PRNG seed differs between simulation and execution, so the selected panel differs too. All verifier records live in one storage entry and locks are keyed by round id, making the footprint selection-independent | Registry size is bounded by the max ledger entry size (≈ a few hundred verifiers). Two rounds opened in the same ledger may race for the same round id; the loser fails and must be resubmitted |
+| T22 | Simulation reveals the would-be panel | A creator can simulate `submit_for_verification` repeatedly to preview candidate panels, but the executed panel uses a different seed | Combined with T8, a determined creator may still time submissions |
 | T20 | Storage TTL expiry (Soroban state archival) | Contracts extend TTL on every write/read of persistent entries | Long-idle projects may need `restore` operations; not automated in MVP |
 
 ## 4. Economic assumptions (to revisit before production)

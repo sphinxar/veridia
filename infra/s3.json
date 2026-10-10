@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "veridia",
+      "credentials": [{ "accessKey": "veridia-dev-access", "secretKey": "veridia-dev-secret-change-me" }],
+      "actions": ["Admin", "Read", "List", "Tagging", "Write"]
+    }
+  ]
+}
